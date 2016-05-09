@@ -6,6 +6,7 @@ import sys
 import time
 
 from multiprocessing import Process
+from django.db import connection
 
 logger = logging.getLogger('chronograph.commands.cron')
 
@@ -21,6 +22,7 @@ class JobProcess(Process):
     
     def run(self):
         logger.info("Running Job: '%s'" % self.job)
+        connection.close()
         self.job.run()
 
 class Command(BaseCommand):
