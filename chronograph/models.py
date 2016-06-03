@@ -139,8 +139,6 @@ class Job(models.Model):
                 next_run = self.next_run
                 if not next_run:
                     next_run = dates.now()
-                next_run = dates.make_naive(next_run)
-                
                 self.next_run = dates.make_aware(self.rrule.after(next_run))
         else:
             self.next_run = None
