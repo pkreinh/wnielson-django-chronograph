@@ -5,7 +5,14 @@ import sys
 
 class Command( BaseCommand ):
     help = 'Deletes old job logs.'
-    
+
+    #
+    # -- Options
+    #
+    def add_arguments(self, parser):
+        # Positional arguments
+        parser.add_argument('args', nargs='+', type=str)
+
     def handle( self, *args, **options ):
         from chronograph.models import Log
         from datetime import datetime, timedelta
