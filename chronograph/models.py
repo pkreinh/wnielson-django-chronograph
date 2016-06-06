@@ -116,6 +116,7 @@ class Job(models.Model):
                                               null=False, editable=False)
     subscribers = models.ManyToManyField(User, blank=True,
                                          limit_choices_to={'is_staff':True})
+    pid = models.IntegerField(blank=True, null=True, editable=False)
     lock_file = models.CharField(max_length=255, blank=True, editable=False)
     force_run = models.BooleanField(default=False)
     
@@ -316,11 +317,11 @@ class Job(models.Model):
         sys.stderr = stderr
         stdout_str, stderr_str = "", ""
 
-        heartbeat = JobHeartbeatThread()
+        #heartbeat = JobHeartbeatThread()
         run_date = dates.now()
         
         self.is_running = True
-        self.lock_file = heartbeat.lock_file.name
+        #self.lock_file = heartbeat.lock_file.name
         
         was_forced = False
 
@@ -330,7 +331,7 @@ class Job(models.Model):
 
         self.save(force_update=True)
         
-        heartbeat.start()
+        #heartbeat.start()
         try:
             logger.debug("Calling command '%s'" % self.command)
             call_command(self.command, *args, **options)
@@ -347,9 +348,9 @@ class Job(models.Model):
             self.last_run_successful = False
         
         # Stop the heartbeat
-        logger.debug("Stopping heartbeat")
-        heartbeat.stop()
-        heartbeat.join()
+        #logger.debug("Stopping heartbeat")
+        #heartbeat.stop()
+        #heartbeat.join()
         
         duration = dates.total_seconds(dates.now()-run_date)
         
@@ -414,22 +415,24 @@ class Job(models.Model):
         Currently, it only supports `posix` systems.  On non-posix systems
         it returns the value of this job's ``is_running`` field.
         """
-        if self.is_running and self.lock_file:
-            # The Job thinks that it is running, so lets actually check
-            if os.path.exists(self.lock_file):
-                # The lock file exists, but if the file hasn't been modified
-                # in less than LOCK_TIMEOUT seconds ago, we assume the process
-                # is dead
-                if (time.time() - os.stat(self.lock_file).st_mtime) <= LOCK_TIMEOUT:
+        if self.is_running and self.pid is not None:
+            # The Job thinks that it is running, so
+            # lets actually check
+            if os.name == 'posix':
+                if os.path.exists("/proc/%d" % self.pid):
+                    # This Job is still running
                     return True
-            
-            # This job isn't running; update it's info
-            self.is_running = False
-            self.lock_file = ""
-            self.save()
+                else:
+                    # This job thinks it is running, but really isn't.
+                    self.is_running = False
+                    self.pid = None
+                    self.save(force_update=True)
+            else:
+                # TODO: add support for other OSes
+                return self.is_running
         return False
-    check_is_running.short_description = "is running"
-    check_is_running.boolean = True
+    #check_is_running.short_description = "is running"
+    #check_is_running.boolean = True
 
 class Log(models.Model):
     """
