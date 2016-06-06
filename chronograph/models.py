@@ -2,6 +2,7 @@
 from django.contrib.auth.models import User
 from django.conf import settings
 from django.core.management import call_command
+from django.core.mail import send_mail
 from django.db import models
 from django.template import loader, Context
 from django.utils.timesince import timeuntil
