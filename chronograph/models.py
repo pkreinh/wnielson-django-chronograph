@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from django.contrib.auth.models import User
 from django.conf import settings
 from django.core.management import call_command
@@ -320,7 +321,13 @@ class Job(models.Model):
         self.is_running = True
         self.lock_file = heartbeat.lock_file.name
         
-        self.save()
+        was_forced = False
+
+        if self.force_run:
+            self.force_run = False
+            was_forced = True
+
+        self.save(force_update=True)
         
         heartbeat.start()
         try:
@@ -362,6 +369,19 @@ class Job(models.Model):
             while self.next_run < dates.now():
                 self.next_run = dates.make_aware(self.rrule.after(self.next_run))
             logger.debug("'next_run = ' %s" % self.next_run)
+
+        # If this was a forced run, then don't update the
+        # next_run date
+
+        if not was_forced:
+            # letzte Ausführung auf zuletzt geplanten Zeitpunkt setzen
+            # (falls bekannt)
+            if self.next_run:
+                self.last_run = self.next_run
+
+            # Nächstes Ausführungsdatum auf eine Zeit NACH diesem Zeitpunkt setzen
+            self.next_run = self.rrule.after(dates.make_aware(datetime.utcnow()))
+
         self.save()
 
         # If we got any output, save it to the log
