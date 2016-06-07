@@ -433,8 +433,8 @@ class Job(models.Model):
                 # TODO: add support for other OSes
                 return self.is_running
         return False
-    #check_is_running.short_description = "is running"
-    #check_is_running.boolean = True
+    check_is_running.short_description = "is running"
+    check_is_running.boolean = True
 
 class Log(models.Model):
     """
