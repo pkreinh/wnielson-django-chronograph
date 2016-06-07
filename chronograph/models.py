@@ -321,6 +321,7 @@ class Job(models.Model):
         run_date = dates.now()
         
         self.is_running = True
+        self.pid = os.getpid()
         #self.lock_file = heartbeat.lock_file.name
         
         was_forced = False
@@ -356,6 +357,7 @@ class Job(models.Model):
         
         self.is_running = False
         self.lock_file = ""
+        self.pid = None
         
         # Only care about minute-level resolution
         self.last_run = dates.localtime(dates.make_aware(datetime(run_date.year, run_date.month, run_date.day,
