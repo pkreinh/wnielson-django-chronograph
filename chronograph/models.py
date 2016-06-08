@@ -332,7 +332,7 @@ class Job(models.Model):
 
         self.save(force_update=True)
         
-        #heartbeat.start()
+        heartbeat.start()
         try:
             logger.debug("Calling command '%s'" % self.command)
             call_command(self.command, *args, **options)
