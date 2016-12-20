@@ -165,7 +165,7 @@ class Job(models.Model):
         delta = self.next_run - dates.now()
         if delta.days < 0:
             # The job is past due and should be run as soon as possible
-            if self.check_is_running():
+            if self.is_running:
                 return _('running')
             return _('due')
         elif delta.seconds < 60:
@@ -283,7 +283,7 @@ class Job(models.Model):
         False
         """
         reqs =  (self.next_run <= dates.now() and self.disabled == False 
-                and self.check_is_running() == False)
+                and self.is_running == False)
         return (reqs or self.force_run)
     
     def run(self):
